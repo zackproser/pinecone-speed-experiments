@@ -39,7 +39,57 @@ python -m pinecone-speed-test.py
 ```
 
 ## Profiling code
-`pyinstrument pinecone-speed-test.py`
+
+There are challenges with running `pyinstrument` directly against a test script when you also want your test script to load packages / libraries from your virtualenv. 
+
+Findings: 
+
+1. Name your overall repo checkout directory the same as your test script: `pinecone-speed-test`, in this case. 
+2. Ensure that directory has a `__init__.py` file in it, which signals that it is a package
+3. Add the pyinstrument code to your actual test script, like so: 
+
+```python
+# At the top of your test script: 
+from pyinstrument import Profiler
+profiler = Profiler()
+profiler.start()
+ 
+# Perform whatever jobs or processing is necessary or that you're trying to profile
+# <code to profile>
+
+
+# At the end of your test script, have the pyinstrument profiler print out its findings: 
+profiler.stop()
+print(profiler.output_text(unicode=True, color=True))
+```
+
+You can then run your test script like so: 
+
+```bash
+pyhon -m pinecone-speed-test
+```
+
+When your test script is finished running you should get output similar to this: 
+
+```bash
+  _     ._   __/__   _ _  _  _ _/_   Recorded: 10:02:50  Samples:  1927
+ /_//_/// /_\ / //_// / //_'/ //     Duration: 25.185    CPU time: 2.651
+/   _/                      v4.5.1
+
+Program: /home/zachary/Pinecone/pinecone-speed-test/pinecone-speed-test.py
+
+25.184 <module>  pinecone-speed-test.py:2
+├─ 21.623 Pinecone.from_documents  langchain/vectorstores/base.py:410
+│     [108 frames hidden]  langchain, pinecone, urllib3, http, s...
+│        8.791 _SSLSocket.read  <built-in>
+│        6.136 _SSLSocket.read  <built-in>
+├─ 2.070 list_indexes  pinecone/manage.py:182
+│     [26 frames hidden]  pinecone, urllib3, http, socket, ssl,...
+├─ 0.805 init  pinecone/config.py:235
+│     [17 frames hidden]  pinecone, requests, urllib3
+└─ 0.664 Pinecone.similarity_search  langchain/vectorstores/pinecone.py:148
+      [47 frames hidden]  langchain, tenacity, openai, requests...
+```
 
 ## Test documents
 

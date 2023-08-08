@@ -1,13 +1,19 @@
 
-import pinecone
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
-import os
-import getpass
 from langchain.vectorstores import Pinecone
+import getpass
+import os
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.document_loaders import TextLoader
+import pinecone
+from pyinstrument import Profiler
+profiler = Profiler()
+profiler.start()
 
-loader = TextLoader("./test-documents/state_of_the_union.txt")
+test_filename_to_load = "larger_test_file.txt"
+# test_filename_to_load = "state_of_the_union.txt"
+
+loader = TextLoader(f"./test-documents/{test_filename_to_load}")
 documents = loader.load()
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 docs = text_splitter.split_documents(documents)
@@ -54,14 +60,5 @@ print(docs[0].page_content)
 index = pinecone.Index(index_name)
 vectorstore = Pinecone(index, embeddings.embed_query, "text")
 
-vectorstore.add_texts("More text!")
-
-retriever = docsearch.as_retriever(search_type="mmr")
-matched_docs = retriever.get_relevant_documents(query)
-for i, d in enumerate(matched_docs):
-    print(f"\n## Document {i}\n")
-    print(d.page_content)
-
-found_docs = docsearch.max_marginal_relevance_search(query, k=2, fetch_k=10)
-for i, doc in enumerate(found_docs):
-    print(f"{i + 1}.", doc.page_content, "\n")
+profiler.stop()
+print(profiler.output_text(unicode=True, color=True))
