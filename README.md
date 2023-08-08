@@ -91,6 +91,98 @@ Program: /home/zachary/Pinecone/pinecone-speed-test/pinecone-speed-test.py
       [47 frames hidden]  langchain, tenacity, openai, requests...
 ```
 
+## Integration with `pyenv`
+
+![pyenv](https://github.com/pyenv/pyenv) is a tool that allows you to quickly install and switch between multiple versions of python locally, which is very useful. 
+
+Unfortunately, using pyenv successfully with the virtualenv workflow described here involves some more setup: 
+
+1. Install `pyenv-virtualenv` (a plugin to manage virtual environments for `pyenv`) by cloning it from GitHub: 
+
+```bash
+git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv
+```
+
+1. Add initialization to your shell. The correct file to edit will vary depending on your preferred shell. I use ZSH, so I edit `~/.zshrc`: 
+```bash
+# Add this to your .bashrc, .bash_profile, or .zshrc:
+# If you already use pyenv and have the following snippet in place: 
+# 
+# if command -v pyenv 1>/dev/null 2>&1; then
+#  eval "$(pyenv init -)"
+# fi
+#
+# then you can add the following within the same if statement, like so: 
+#
+# if command -v pyenv 1>/dev/null 2>&1; then
+#  eval "$(pyenv init -)"
+#  eval "$(pyenv virtualenv-init -)"
+# fi
+#
+# Otherwise, ensure this line is present in your preferred shell's configuration file:
+eval "$(pyenv virtualenv-init -)"
+```
+
+Be sure to reload your shell with `exec "$SHELL"`
+
+1. Create a virtual environment using the specific Python version you want: 
+```python
+pyenv virtualenv 3.8.1 myenv
+```
+
+1. Activate the virtual environment 
+
+```bash
+pyenv activate myenv
+```
+
+1. Deactivate when you're done
+
+```bash
+pyenv deactivate
+```
+
+## Use the `pyenv local` command to set a specific virtualenv to be active in a given directory
+
+```bash
+pyenv local myenv
+```
+
+This will create a `.python-version` file in that directory, and anytime you `cd` into this directory, 
+the specified virtual environment will be automatically activated. 
+
+## Finding and modifying virtualenv code with pyenv and the virtualenv plugin
+
+To find where pyenv installed your virtualenv, you can run: 
+```bash
+pyenv prefix myenv
+```
+
+This gives you to the path the to virtual environment names `myenv`. 
+
+Next, navigate to the directory returned by `pyenv prefix myenv` and you'll find the Python installation
+for that virtual environment. To find and modify library code, you can navigate to the `site-packages` directory 
+where the installed packages reside: 
+
+```bash
+# (Replace 3.8 with the exact version of Python you specified for your virtualenv if it's different)
+
+cd $(pyenv prefix myenv)/lib/python3.8/site-packages
+```
+
+Here, you'll find the latest code for all the installed packages, and you can edit them as needed to test out 
+your changes. Changes made to the library code here will only affect your currently activated Python virtual 
+environment. 
+
+## Running your test script against the modified library code in your virtualenv
+
+In your test directory, with your `pyenv-virtualenv` plugin installed and your
+virtualenv created and activated as described above, you can now run 
+
+`python -m pinecone-speed-test.py`, for example, in order to perform profiling and 
+arbitrary tests against modified library code. 
+
 ## Test documents
 
-There are files of various sizes in `./test-documents/`
+There are files of various sizes in `./test-documents/` that may be useful for running various 
+Pinecone and langhchain operations against.
