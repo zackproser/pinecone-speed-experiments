@@ -1,21 +1,31 @@
+
 import pinecone
 from langchain.document_loaders import TextLoader
-from langchain.vectorstores import Pinecone
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 import os
 import getpass
+from langchain.vectorstores import Pinecone
 
-os.environ["PINECONE_API_KEY"] = getpass.getpass("Pinecone API Key:")
-os.environ["PINECONE_ENV"] = getpass.getpass("Pinecone Environment:")
-os.environ["OPENAI_API_KEY"] = getpass.getpass("OpenAI API Key:")
-
-loader = TextLoader("./state_of_the_union.txt")
+loader = TextLoader("./test-documents/state_of_the_union.txt")
 documents = loader.load()
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 docs = text_splitter.split_documents(documents)
 
 embeddings = OpenAIEmbeddings()
+
+# Use the Pinecone environment variables, if set - otherwise, securely prompt the user for them
+if "PINECONE_API_KEY" in os.environ:
+    pass
+else:
+    os.environ['PINECONE_API_KEY'] = getpass.getpass(
+        'Please enter your PINECONE_API_KEY:')
+
+if "PINECONE_ENVIRONMENT" in os.environ:
+    pass
+else:
+    os.environ['PINECONE_ENVIRONMENT'] = getpass.getpass(
+        'Please enter your PINECONE_ENVIRONMENT:')
 
 # initialize pinecone
 pinecone.init(
